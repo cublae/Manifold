@@ -1,0 +1,15 @@
+// Manifold stylesheet entry point.
+//
+// Compiled to CSS by the AGS build (dart-sass) and applied at startup. Runtime
+// overrides derived from the user config are layered on top by lib/theme.ts.
+
+@use "tokens" as *;
+@use "base";
+@use "widgets/bar";
+@use "widgets/popup";
+@use "widgets/controlcenter";
+@use "widgets/notifications";
+@use "widgets/launcher";
+@use "widgets/osd";
+@use "widgets/weather";
+@use "widgets/desktop";

@@ -1,0 +1,13 @@
+{
+  "name": "manifold",
+  "version": "0.1.0",
+  "description": "A desktop shell for the niri compositor, built on AGS and GTK4",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "MANIFOLD_DEV=1 ags run src/app.ts --gtk4",
+    "bundle": "ags bundle src/app.ts dist/manifold",
+    "typecheck": "tsc --noEmit",
+    "types": "bash tools/generate-types.sh"
+  }
+}

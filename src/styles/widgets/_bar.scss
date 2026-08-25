@@ -1,0 +1,253 @@
+@use "../tokens" as *;
+
+.manifold-bar {
+  .manifold-bar-section {
+    // Sections are laid out by a CenterBox; spacing between modules only.
+    margin: 0 $space-3;
+  }
+
+  // -- workspaces -----------------------------------------------------------
+  .manifold-workspaces {
+    padding: 0 $space-2;
+    // Modules size to their content and sit centred in the bar.
+    min-height: 26px;
+
+    button {
+      background-image: none;
+      background-color: transparent;
+      border: none;
+      box-shadow: none;
+      // Room for the app icons; the button grows past this as they are added.
+      padding: 0 $space-2;
+      margin: 0 $space-1;
+      min-width: 24px;
+      min-height: 24px;
+      border-radius: $radius-sm;
+      color: $fg;
+      transition: all $transition;
+
+      &:hover {
+        background-color: gtkalpha($fg, 0.08);
+      }
+    }
+
+    // niri's active workspace on this output.
+    button.active {
+      background-color: gtkalpha($accent, 0.15);
+      color: $accent;
+    }
+
+    // Active *and* holding keyboard focus. Widened into a pill, the way GNOME
+    // marks the current workspace in the overview.
+    button.focused {
+      background-color: $accent-bg;
+      color: $accent-fg;
+      min-width: 34px;
+    }
+
+    button.urgent {
+      background-color: gtkalpha($destructive, 0.2);
+      color: $destructive;
+    }
+
+    button.empty:not(.active):not(.focused) {
+      opacity: 0.45;
+    }
+  }
+
+  // -- focused window -------------------------------------------------------
+  .manifold-focused-window {
+    label {
+      font-weight: 500;
+    }
+
+    .app-id {
+      opacity: $dim-opacity;
+      font-weight: 400;
+    }
+  }
+
+  // -- clock ----------------------------------------------------------------
+  .manifold-clock {
+    font-weight: 600;
+    font-feature-settings: "tnum";
+  }
+
+  // -- indicators -----------------------------------------------------------
+  .manifold-indicators {
+    image {
+      margin: 0 $space-1;
+      -gtk-icon-size: 16px;
+    }
+  }
+
+  .manifold-keyboard-layout {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  // Shown when the niri event stream is down, so a frozen bar is never silent.
+  .manifold-disconnected {
+    color: $warning;
+  }
+}
+
+// -- tray -------------------------------------------------------------------
+.manifold-bar {
+  .manifold-tray {
+    padding: 0 $space-2;
+
+    button.manifold-tray-item {
+      background-image: none;
+      background-color: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      min-width: 24px;
+      min-height: 24px;
+      border-radius: $radius-sm;
+    }
+
+    button.manifold-tray-item:hover {
+      background-color: gtkalpha($fg, 0.08);
+    }
+
+    image {
+      -gtk-icon-size: 16px;
+    }
+  }
+
+  // The indicator row is one button, the way GNOME groups its status icons.
+  button.manifold-indicators-button {
+    padding: 0 $space-3;
+  }
+}
+
+// -- workspace app icons ----------------------------------------------------
+.manifold-bar {
+  .manifold-workspaces button {
+    .index {
+      font-weight: 600;
+    }
+
+    // Icons sit beside the index at a size that keeps the bar from growing.
+    image.app {
+      -gtk-icon-size: 14px;
+    }
+
+    // On the focused workspace the pill is already accented, so the icons only
+    // need to not fight it.
+    &.focused image.app {
+      opacity: 0.95;
+    }
+
+    // Elsewhere they are secondary to the number.
+    &:not(.focused) image.app {
+      opacity: 0.8;
+    }
+  }
+}
+
+// -- vertical bars ----------------------------------------------------------
+// A bar a few dozen pixels wide has no room for horizontal padding or for the
+// wide pill a lone digit gets when horizontal, so the metrics swap axes.
+.manifold-bar.position-left,
+.manifold-bar.position-right {
+  .manifold-bar-section {
+    margin: $space-3 0;
+  }
+
+  .manifold-module {
+    padding: $space-2 0;
+  }
+
+  .manifold-workspaces {
+    padding: $space-2 0;
+
+    button {
+      padding: $space-2 0;
+      margin: $space-1 0;
+      min-width: 0;
+      min-height: 24px;
+    }
+
+    // Widening the focused pill is a horizontal-bar idea; vertically it just
+    // makes the button squat.
+    button.focused {
+      min-width: 0;
+    }
+  }
+
+  .manifold-clock {
+    font-size: 0.85rem;
+    line-height: 1.1;
+  }
+
+  .manifold-tray,
+  .manifold-indicators {
+    padding: $space-2 0;
+  }
+
+  .manifold-indicators image {
+    margin: $space-1 0;
+  }
+}
+
+// A bottom bar's dropdowns rise from it, so their shadow points the other way.
+.manifold-popup.position-bottom {
+  box-shadow: 0 -4px 16px 2px $shade;
+}
+
+// -- recording indicator ----------------------------------------------------
+// Only on screen while a recording runs, so it may shout a little.
+button.manifold-recording {
+  color: $destructive;
+
+  .dot {
+    background-color: $destructive;
+    border-radius: 999px;
+    min-width: 8px;
+    min-height: 8px;
+  }
+}
+
+// -- screen capture ---------------------------------------------------------
+// Same red as the recording indicator, because it means the same thing to the
+// person looking at the bar: something is watching this screen right now.
+.manifold-screencast {
+  color: $destructive;
+
+  .dot {
+    background-color: $destructive;
+    border-radius: 999px;
+    min-width: 8px;
+    min-height: 8px;
+  }
+}
+
+// -- microphone and camera --------------------------------------------------
+// Accented rather than red. These are ordinary states -- a call is running --
+// and reserving red for capture keeps the one alarming colour meaningful.
+.manifold-privacy {
+  .listening,
+  .watching {
+    color: $accent;
+  }
+}
+
+// -- resources --------------------------------------------------------------
+.manifold-resources {
+  font-size: 0.85rem;
+
+  .name {
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+}
+
+// -- weather ----------------------------------------------------------------
+.manifold-weather {
+  font-weight: 600;
+  font-feature-settings: "tnum";
+}

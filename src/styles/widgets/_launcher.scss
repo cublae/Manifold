@@ -1,0 +1,90 @@
+@use "../tokens" as *;
+
+.manifold-launcher {
+  entry.manifold-launcher-entry {
+    border-radius: $radius-lg;
+    min-height: 38px;
+    padding: 0 $space-4;
+    background-color: $view-bg;
+    color: $view-fg;
+  }
+
+  .manifold-launcher-list {
+    background-color: transparent;
+  }
+
+  .manifold-launcher-row {
+    padding: $space-3 $space-4;
+    border-radius: $radius-md;
+
+    .name {
+      font-weight: 600;
+    }
+
+    .description {
+      font-size: 0.85rem;
+    }
+
+    &:selected {
+      background-color: $accent-bg;
+      color: $accent-fg;
+
+      .description {
+        opacity: 0.85;
+      }
+    }
+
+    &:hover:not(:selected) {
+      background-color: gtkalpha($fg, 0.08);
+    }
+
+    // The pin holds its space on every row and only shows itself where it is
+    // relevant: under the pointer, or on a row that is already pinned. Hiding
+    // it with `opacity` rather than `visibility` is what keeps the names of
+    // pinned and unpinned applications lined up with each other.
+    button.manifold-launcher-pin {
+      background: none;
+      border: none;
+      box-shadow: none;
+      min-width: 26px;
+      min-height: 26px;
+      padding: 0;
+      border-radius: $radius-md;
+      color: inherit;
+      opacity: 0;
+      transition: opacity $transition, background-color $transition;
+
+      &:hover {
+        background-color: gtkalpha($fg, 0.14);
+      }
+
+      &.pinned {
+        opacity: 1;
+      }
+    }
+
+    &:hover button.manifold-launcher-pin {
+      opacity: 0.7;
+
+      &:hover,
+      &.pinned {
+        opacity: 1;
+      }
+    }
+  }
+
+  // A character standing in for an icon, so it needs the size of one.
+  .manifold-launcher-emoji {
+    font-size: 1.6rem;
+  }
+
+  .manifold-launcher-empty {
+    padding: $space-5 0;
+  }
+}
+
+// The thumbnail beside a clipboard entry that holds an image.
+.manifold-clipboard-thumbnail {
+  border-radius: $radius-md;
+  background-color: gtkalpha($fg, 0.08);
+}

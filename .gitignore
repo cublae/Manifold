@@ -1,0 +1,7 @@
+dist/
+result
+result-*
+node_modules/
+@girs/
+.direnv/
+*.css.map

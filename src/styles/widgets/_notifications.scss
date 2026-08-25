@@ -1,0 +1,177 @@
+@use "../tokens" as *;
+
+// Popups float free of any panel, so each card is its own surface.
+.manifold-notification-popups {
+  margin: $space-3 $space-4;
+}
+
+.manifold-notification {
+  padding: $space-4;
+  border-radius: $radius-lg;
+  background-color: $bg;
+  color: $fg;
+  min-width: 320px;
+
+  .header {
+    font-size: 0.95rem;
+
+    .app-name {
+      font-weight: 600;
+    }
+
+    .time {
+      font-size: 0.9rem;
+    }
+  }
+
+  .summary {
+    font-weight: 700;
+  }
+
+  .body {
+    font-size: 0.9rem;
+  }
+
+  button.close {
+    background-image: none;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    min-width: 22px;
+    min-height: 22px;
+    padding: 0;
+    border-radius: $radius-sm;
+    color: $destructive;
+
+    &:hover {
+      background-color: gtkalpha($destructive, 0.2);
+    }
+  }
+
+  .actions button {
+    background-image: none;
+    background-color: gtkalpha($fg, 0.08);
+    border: none;
+    box-shadow: none;
+    border-radius: $radius-md;
+    padding: $space-2 $space-4;
+    min-height: 28px;
+
+    &:hover {
+      background-color: gtkalpha($fg, 0.14);
+    }
+  }
+
+  // Thumbnails are cropped to a fixed box by the widget; this only rounds it.
+  .manifold-notification-image {
+    border-radius: $radius-md;
+  }
+
+  // Standalone popups need their own elevation; cards inside the centre do not.
+  &.popup {
+    box-shadow: 0 4px 16px 2px $shade;
+  }
+
+  &.critical {
+    border: 1px solid $destructive;
+
+    .summary {
+      color: $destructive;
+    }
+  }
+
+  &.low .summary {
+    font-weight: 600;
+  }
+}
+
+// -- the centre -------------------------------------------------------------
+.manifold-notification-center {
+  // Wide enough for the widest card -- a thumbnail plus the text column -- to
+  // fit at its natural width. A card squeezed below that gets its height
+  // measured at one width and allocated at another; see NotificationCard.
+  min-width: 400px;
+}
+
+// Cards listed in the centre sit on the panel, so they take the card fill
+// rather than the window background the free-floating popups use.
+.manifold-notification-list .manifold-notification {
+  background-color: $card-bg;
+  color: $card-fg;
+  min-width: 0;
+}
+
+// The list's own heading, on the same surface as the cards below it.
+.manifold-notification-header {
+  background-color: $card-bg;
+  color: $card-fg;
+  border-radius: $radius-lg;
+  padding: $space-2 $space-2 $space-2 $space-4;
+
+  .title {
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+}
+
+button.manifold-notification-action {
+  background-image: none;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: $radius-md;
+  color: inherit;
+  transition: background-color $transition;
+
+  &:hover {
+    background-color: gtkalpha($fg, 0.1);
+  }
+
+  &.active {
+    background-color: $accent-bg;
+    color: $accent-fg;
+  }
+
+  &.destructive {
+    color: $destructive;
+
+    &:hover {
+      background-color: gtkalpha($destructive, 0.2);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    background-color: transparent;
+  }
+}
+
+.manifold-notification-empty {
+  padding: $space-5 0;
+}
+
+// Unread marker on the bar's bell. It is drawn over the icon's own corner, so
+// it must stay small enough not to swallow the bell underneath it.
+.manifold-notification-dot {
+  background-color: $accent-bg;
+  border-radius: 999px;
+  min-width: 7px;
+  min-height: 7px;
+  // Pulls the dot back over the icon rather than letting it hang off the edge.
+  margin: -1px -1px 0 0;
+}
+
+// A run of notifications from one application, folded behind a count.
+.manifold-notification-group {
+  .header {
+    padding: 0 $space-2;
+
+    .app-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+  }
+}

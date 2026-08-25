@@ -1,0 +1,80 @@
+@use "../tokens" as *;
+
+// Widgets sitting on the wallpaper. Nothing here has a panel behind it, so the
+// text carries its own shadow -- a wallpaper can be any colour, and a clock
+// that disappears over a bright one is worse than no clock.
+.manifold-desktop-window {
+  background-color: transparent;
+}
+
+.manifold-desktop {
+  // Always light. It sits over the wallpaper, not over a themed surface, and
+  // a dark clock on a dark photograph is unreadable whatever the colour scheme
+  // says.
+  color: white;
+  text-shadow: 0 2px 8px gtkalpha(black, 0.55);
+}
+
+.manifold-desktop-clock {
+  font-size: 5rem;
+  font-weight: 200;
+  font-feature-settings: "tnum";
+}
+
+.manifold-desktop-date {
+  font-size: 1.3rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.manifold-desktop-media {
+  margin-top: $space-4;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+// -- edit mode --------------------------------------------------------------
+// Each widget gets a handle to grab while the desktop is being arranged. The
+// outline is what says a thing is draggable; without it the only way to find
+// out is to try.
+.manifold-desktop-piece {
+  padding: $space-2 $space-3;
+  border-radius: $radius-md;
+}
+
+.editing .manifold-desktop-piece {
+  background-color: gtkalpha(black, 0.35);
+  border: 1px dashed gtkalpha(white, 0.5);
+
+  &:hover {
+    background-color: gtkalpha(black, 0.5);
+    border-color: white;
+  }
+
+  // Solid while it is being moved, so the thing under the pointer is obvious
+  // against the dashed outlines of the ones that are not.
+  &.dragging {
+    background-color: gtkalpha(black, 0.6);
+    border-style: solid;
+    border-color: white;
+  }
+}
+
+// Stands in for a widget with nothing to show, so it can still be found and
+// moved. Only ever visible while arranging.
+.manifold-desktop-placeholder {
+  font-size: 0.9rem;
+  font-style: italic;
+  opacity: 0.75;
+}
+
+// The line explaining the arranging gestures. Sits at the top, out of the way
+// of the widgets, which are usually nearer the middle.
+.manifold-desktop-hint {
+  margin-top: $space-5;
+  padding: $space-2 $space-4;
+  border-radius: 999px;
+  background-color: gtkalpha(black, 0.55);
+  color: white;
+  font-size: 0.9rem;
+}

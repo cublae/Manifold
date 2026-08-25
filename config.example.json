@@ -1,0 +1,40 @@
+{
+  "bar": {
+    "position": "bottom",
+    "size": 38,
+    "modules": {
+      "start": ["workspaces", "focused-window"],
+      "center": ["clock"],
+      "end": ["keyboard-layout", "system-indicators", "control-center"]
+    }
+  },
+  "workspaces": {
+    "perMonitor": true,
+    "showEmpty": true,
+    "labels": "index"
+  },
+  "clock": {
+    "format": "%H:%M",
+    "tooltipFormat": "%A, %e %B %Y"
+  },
+  "osd": {
+    "barRadius": 0
+  },
+  "animations": {
+    "enabled": true,
+    "duration": 180
+  },
+  "audio": {
+    "maxVolume": 1
+  },
+  "calendar": {
+    "firstDay": "monday"
+  },
+  "theme": {
+    "mode": "auto",
+    "accent": "#3584e4",
+    "radius": 12,
+    "spacing": 6,
+    "opacity": 1
+  }
+}

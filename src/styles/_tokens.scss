@@ -1,0 +1,70 @@
+// Design tokens.
+//
+// Colours are *references* to libadwaita's named colours rather than literals.
+// Sass would choke on a bare `@window_bg_color`, so each is wrapped in string
+// interpolation and emitted verbatim into the compiled CSS. GTK resolves the
+// name at render time, which is what lets a single stylesheet serve both the
+// light and the dark scheme with no duplicated palette.
+//
+// Reference: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/named-colors.html
+
+// -- surfaces ---------------------------------------------------------------
+$bg:            #{"@window_bg_color"};
+$fg:            #{"@window_fg_color"};
+$view-bg:       #{"@view_bg_color"};
+$view-fg:       #{"@view_fg_color"};
+$card-bg:       #{"@card_bg_color"};
+$card-fg:       #{"@card_fg_color"};
+$popover-bg:    #{"@popover_bg_color"};
+$popover-fg:    #{"@popover_fg_color"};
+$headerbar-bg:  #{"@headerbar_bg_color"};
+
+// -- accents and status -----------------------------------------------------
+$accent-bg:     #{"@accent_bg_color"};
+$accent-fg:     #{"@accent_fg_color"};
+$accent:        #{"@accent_color"};
+$destructive:   #{"@destructive_color"};
+$warning:       #{"@warning_color"};
+$success:       #{"@success_color"};
+
+// -- separators and shadow --------------------------------------------------
+$border:        #{"@borders"};
+$shade:         #{"@shade_color"};
+
+// -- metrics ----------------------------------------------------------------
+// Radii are GTK custom properties rather than literals: `theme.radius` is read
+// at runtime, and lib/theme.ts defines the three values on the shell's windows
+// so every rule below follows the setting without restating a selector.
+//
+// The tiers: `lg` is what a surface gets -- panels, cards, the launcher -- and
+// the two smaller ones are for the controls inside them.
+$radius-lg: #{"var(--manifold-radius-lg)"};
+$radius-md: #{"var(--manifold-radius-md)"};
+$radius-sm: #{"var(--manifold-radius-sm)"};
+$space-1: 2px;
+$space-2: 4px;
+$space-3: 6px;
+$space-4: 10px;
+$space-5: 16px;
+
+$transition: 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+// Adwaita dims secondary text by opacity rather than by a separate colour.
+$dim-opacity: 0.7;
+
+// -- GTK colour functions ---------------------------------------------------
+// GTK CSS has its own `alpha()`, `mix()` and `shade()`. Sass defines built-ins
+// with the same names that reject our `@named-color` strings, so these helpers
+// emit the calls verbatim and leave the evaluation to GTK.
+
+@function gtkalpha($color, $alpha) {
+  @return #{"alpha(#{$color}, #{$alpha})"};
+}
+
+@function gtkmix($a, $b, $amount) {
+  @return #{"mix(#{$a}, #{$b}, #{$amount})"};
+}
+
+@function gtkshade($color, $factor) {
+  @return #{"shade(#{$color}, #{$factor})"};
+}

@@ -1,0 +1,265 @@
+@use "../tokens" as *;
+
+// Quick settings, laid out as a grid of tiles over sliders and a media card.
+
+.manifold-control-center .manifold-popup-content {
+  min-width: 320px;
+}
+
+// -- top row ----------------------------------------------------------------
+.manifold-cc-toprow {
+  .manifold-battery-chip {
+    padding: $space-2 $space-4;
+    border-radius: $radius-lg;
+    background-color: gtkalpha($fg, 0.08);
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  // The power buttons are square-ish targets, not pills: they follow
+  // `theme.radius` like every other surface.
+  button.manifold-round-button {
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0;
+    border-radius: $radius-lg;
+    background-color: gtkalpha($fg, 0.08);
+    color: $fg;
+
+    &:hover {
+      background-color: gtkalpha($fg, 0.14);
+    }
+  }
+
+  // Restart and power off share one outline: the join is square and marked by
+  // a hairline, so the pair reads as a single block.
+  .manifold-power-group button.manifold-round-button {
+    &:first-child {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    &:last-child {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      border-left: 1px solid gtkalpha($bg, 0.25);
+    }
+  }
+}
+
+// -- tiles ------------------------------------------------------------------
+// A tile is one visual object split into two press targets, so the two buttons
+// carry the rounding between them rather than each being a pill of its own.
+.manifold-tile {
+  border-radius: $radius-lg;
+
+  button.manifold-tile-body,
+  button.manifold-tile-expand {
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    background-color: gtkalpha($fg, 0.08);
+    color: $fg;
+    transition: background-color $transition;
+
+    &:hover {
+      background-color: gtkalpha($fg, 0.14);
+    }
+
+    &.active {
+      background-color: $accent-bg;
+      color: $accent-fg;
+    }
+
+    &.active:hover {
+      background-color: gtkshade($accent-bg, 1.08);
+    }
+  }
+
+  button.manifold-tile-body {
+    padding: $space-3 $space-4;
+    // Sized for two lines, so every tile is the same height whatever its
+    // subtitle says.
+    min-height: 52px;
+    border-radius: $radius-lg 0 0 $radius-lg;
+
+    // No chevron beside it: the button is the tile.
+    &.solo {
+      border-radius: $radius-lg;
+    }
+
+    .title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      opacity: 0.75;
+    }
+  }
+
+  button.manifold-tile-expand {
+    min-width: 26px;
+    padding: 0;
+    border-radius: 0 $radius-lg $radius-lg 0;
+    // Hairline keeps the halves legible as separate targets.
+    border-left: 1px solid gtkalpha($bg, 0.25);
+  }
+}
+
+// -- sliders ----------------------------------------------------------------
+// The trough is tall enough to hold the icon, and the handle is hidden, so the
+// fill itself reads as the control.
+.manifold-fat-slider-row {
+  .manifold-fat-slider-icon {
+    margin-left: $space-4;
+    color: $accent-fg;
+  }
+}
+
+scale.manifold-fat-slider {
+  min-height: 38px;
+  padding: 0;
+
+  trough {
+    min-height: 38px;
+    border-radius: $radius-lg;
+    background-color: gtkalpha($fg, 0.08);
+  }
+
+  highlight {
+    min-height: 38px;
+    border-radius: $radius-lg;
+    background-color: $accent-bg;
+  }
+
+  slider {
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+
+  // Keyboard focus. The handle is hidden and the fill is the whole control, so
+  // the ring goes round the trough rather than the widget, and inset, or the
+  // rounded corners cut it off. In the foreground colour rather than the accent:
+  // the fill is already accent-coloured, and a full bar would swallow it.
+  &:focus-visible trough {
+    outline: 2px solid $fg;
+    outline-offset: -2px;
+  }
+}
+
+
+// The chevron that opens the per-application mixer. It reads as part of the
+// volume slider, so it takes the slider's height and fill.
+button.manifold-slider-expand {
+  background-image: none;
+  background-color: gtkalpha($fg, 0.08);
+  border: none;
+  box-shadow: none;
+  min-width: 30px;
+  min-height: 38px;
+  padding: 0;
+  border-radius: $radius-lg;
+  color: $fg;
+  transition: background-color $transition;
+
+  &:hover {
+    background-color: gtkalpha($fg, 0.14);
+  }
+}
+
+// -- mixer ------------------------------------------------------------------
+.manifold-mixer-row {
+  .name {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+}
+
+// -- media card -------------------------------------------------------------
+.manifold-media-card {
+  border-radius: $radius-lg;
+
+  .media-scrim {
+    // Dark at the bottom where the text sits, clear at the top where the art
+    // should show through.
+    background-image: linear-gradient(
+      to bottom,
+      gtkalpha(black, 0.15) 0%,
+      gtkalpha(black, 0.55) 55%,
+      gtkalpha(black, 0.8) 100%
+    );
+  }
+
+  .media-foreground {
+    padding: $space-4;
+    // Always light: it sits over artwork, not over the panel.
+    color: white;
+  }
+
+  .media-header .app {
+    font-size: 0.8rem;
+    opacity: 0.9;
+  }
+
+  .title {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .artist {
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+
+  .time {
+    font-size: 0.78rem;
+    opacity: 0.8;
+    font-feature-settings: "tnum";
+  }
+
+  .controls button {
+    background: none;
+    border: none;
+    box-shadow: none;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    border-radius: 999px;
+    color: white;
+
+    &:hover {
+      background-color: gtkalpha(white, 0.18);
+    }
+
+    &:disabled {
+      opacity: 0.35;
+    }
+  }
+}
+
+// Headings inside the mixer page: output devices, inputs, applications.
+.manifold-mixer-section {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+// The mute beside the microphone slider: lit when the microphone is off, the
+// same way an active tile is lit.
+button.manifold-slider-expand.active {
+  background-color: $accent-bg;
+  color: $accent-fg;
+
+  &:hover {
+    background-color: gtkshade($accent-bg, 1.08);
+  }
+}

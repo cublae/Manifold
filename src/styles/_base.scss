@@ -1,0 +1,68 @@
+@use "tokens" as *;
+
+// Layer-shell surfaces must be transparent; the visible panel is the child box,
+// so its rounded corners are not clipped by an opaque window background.
+window.manifold-window {
+  background-color: transparent;
+  color: $fg;
+}
+
+.manifold-root {
+  // Inherit the system font by default. `theme.font` overrides this at runtime.
+  font-size: 1rem;
+}
+
+// The rounded, elevated surface used by dropdown panels.
+.manifold-panel {
+  background-color: $bg;
+  color: $fg;
+  border-radius: $radius-lg;
+  box-shadow: 0 1px 3px 1px $shade;
+}
+
+// The bar sits flush against the screen edge: square, unelevated, and with no
+// edge of its own. A hairline against the desktop would also land between the
+// bar and a dropdown -- they are separate layer surfaces meeting exactly there
+// -- and read as a seam down the middle of one continuous panel.
+.manifold-bar-panel {
+  background-color: $bg;
+  color: $fg;
+}
+
+.dim {
+  opacity: $dim-opacity;
+}
+
+// Generic interactive chip used by bar modules and quick toggles.
+.manifold-module {
+  border-radius: $radius-md;
+  padding: 0 $space-4;
+  transition: background-color $transition;
+}
+
+button.manifold-module {
+  background-image: none;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  min-height: 24px;
+  color: $fg;
+
+  &:hover {
+    background-color: gtkalpha($fg, 0.08);
+  }
+
+  &:active,
+  &.active {
+    background-color: gtkalpha($fg, 0.14);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $accent;
+    outline-offset: -2px;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+  }
+}

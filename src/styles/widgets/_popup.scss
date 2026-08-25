@@ -1,0 +1,260 @@
+@use "../tokens" as *;
+
+// The full-surface backdrop that catches clicks outside a dropdown. It must
+// stay fully transparent: it covers the whole screen below the bar.
+.manifold-popup-backdrop {
+  background-color: transparent;
+}
+
+.manifold-popup {
+  // A dropdown reads as something the bar pushed out, so it is flush with the
+  // bar and with the screen edge it is aligned to, and its corners there stay
+  // square. Only the edge facing into the screen keeps a margin.
+  margin: $space-3 0;
+  padding: $space-5;
+  box-shadow: 0 4px 16px 2px $shade;
+
+  &.position-top {
+    margin-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
+  &.position-bottom {
+    margin-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  &.position-left {
+    margin-left: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  &.position-right {
+    margin-right: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+.manifold-popup-content {
+  min-width: 300px;
+}
+
+
+
+// A panel that runs the whole height of the surface meets the screen edge at
+// both ends, so it keeps no margin there and no rounding on the corners that
+// touch: a side panel, not a dropdown with room around it.
+.manifold-popup.manifold-popup-tall {
+  margin-top: 0;
+  margin-bottom: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+// A panel that belongs to no edge: it floats in the middle of the screen, so
+// it keeps all four corners and a shadow all the way round.
+.manifold-popup.manifold-popup-floating {
+  margin: 0;
+  border-radius: $radius-lg;
+  box-shadow: 0 8px 32px 4px $shade;
+}
+
+// -- calendar ---------------------------------------------------------------
+// Full date above the grid in the clock's dropdown.
+.manifold-calendar-heading {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: $space-2;
+}
+
+.manifold-calendar {
+  .manifold-calendar-header {
+    margin-bottom: $space-2;
+
+    button.manifold-calendar-title {
+      background-image: none;
+      background-color: transparent;
+      border: none;
+      box-shadow: none;
+      padding: $space-2 $space-4;
+      border-radius: $radius-md;
+      color: inherit;
+
+      .title {
+        font-weight: 700;
+        font-size: 1.05rem;
+      }
+
+      &:hover {
+        background-color: gtkalpha($fg, 0.08);
+      }
+    }
+
+    button.manifold-calendar-nav {
+      background-image: none;
+      background-color: transparent;
+      border: none;
+      box-shadow: none;
+      min-width: 28px;
+      min-height: 28px;
+      padding: 0;
+      border-radius: $radius-sm;
+      color: inherit;
+
+      &:hover {
+        background-color: gtkalpha($fg, 0.08);
+      }
+    }
+  }
+
+  .weekday {
+    font-size: 0.85rem;
+    font-weight: 700;
+    opacity: $dim-opacity;
+    padding-bottom: $space-2;
+
+    &.weekend {
+      color: $destructive;
+      opacity: 1;
+    }
+  }
+
+  // Day cells are labels, not buttons: nothing here is clickable, so the only
+  // job of the box is to carry the highlight.
+  .day {
+    font-size: 0.95rem;
+    min-width: 32px;
+    min-height: 30px;
+    border-radius: $radius-sm;
+
+    &.weekend {
+      color: $destructive;
+    }
+
+    // Days spilling in from the neighbouring months stay legible but recede.
+    &.other-month {
+      opacity: 0.35;
+    }
+
+    &.today {
+      background-color: $accent-bg;
+      color: $accent-fg;
+      font-weight: 700;
+    }
+
+    // Today can show up as a spill-over cell when the view is a month behind.
+    &.other-month.today {
+      opacity: 0.5;
+    }
+  }
+}
+
+// -- detail pages -----------------------------------------------------------
+.manifold-cc-header {
+  .title {
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+}
+
+// A toggle that opens a detail page is split in two: pressing the body turns
+// the thing on, pressing the chevron shows the list.
+.manifold-quick-split {
+  button.manifold-quick-toggle {
+    border-radius: $radius-lg 0 0 $radius-lg;
+  }
+
+  button.manifold-quick-expand {
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    min-width: 32px;
+    border-radius: 0 $radius-lg $radius-lg 0;
+    background-color: gtkalpha($fg, 0.07);
+    color: $fg;
+    // A hairline keeps the two halves readable as separate targets.
+    border-left: 1px solid gtkalpha($bg, 0.3);
+
+    &:hover {
+      background-color: gtkalpha($fg, 0.12);
+    }
+
+    &.active {
+      background-color: $accent-bg;
+      color: $accent-fg;
+    }
+
+    &.active:hover {
+      background-color: gtkshade($accent-bg, 1.08);
+    }
+  }
+}
+
+.manifold-device-list {
+  padding: $space-1 0;
+}
+
+button.manifold-device-row {
+  background-image: none;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  padding: $space-3 $space-4;
+  border-radius: $radius-md;
+  color: $fg;
+
+  .description {
+    font-size: 0.8rem;
+  }
+
+  &:hover {
+    background-color: gtkalpha($fg, 0.08);
+  }
+
+  &.active {
+    background-color: gtkalpha($accent, 0.15);
+    color: $accent;
+  }
+}
+
+// A row plus the button that forgets it, drawn as one strip: the forget button
+// has no fill of its own until the pointer is on it, so a list of saved
+// networks does not read as a column of buttons.
+button.manifold-device-forget {
+  background-image: none;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  min-width: 30px;
+  padding: 0;
+  border-radius: $radius-md;
+  color: $destructive;
+  opacity: 0.6;
+  transition: background-color $transition, opacity $transition;
+
+  &:hover {
+    background-color: gtkalpha($destructive, 0.18);
+    opacity: 1;
+  }
+}
+
+.manifold-password-prompt {
+  padding: $space-2 0;
+
+  entry.manifold-password-entry {
+    border-radius: $radius-md;
+    min-height: 32px;
+    background-color: $view-bg;
+    color: $view-fg;
+  }
+}
+
+.manifold-device-empty {
+  padding: $space-5 0;
+}

@@ -1,0 +1,53 @@
+@use "../tokens" as *;
+
+// The forecast dropped from the bar's weather module.
+.manifold-weather-popup {
+  min-width: 300px;
+}
+
+.manifold-weather-place {
+  font-weight: 600;
+  font-size: 0.9rem;
+  opacity: 0.75;
+  letter-spacing: 0.02em;
+}
+
+.manifold-weather-today {
+  .temperature {
+    font-size: 2rem;
+    font-weight: 300;
+    font-feature-settings: "tnum";
+  }
+
+  .label {
+    font-weight: 600;
+  }
+
+  .detail {
+    font-size: 0.85rem;
+  }
+}
+
+.manifold-weather-day {
+  padding: $space-2 $space-3;
+  border-radius: $radius-md;
+
+  .day {
+    font-weight: 600;
+  }
+
+  // Both temperatures use lining figures so the column stays aligned as the
+  // digits change.
+  .high,
+  .low {
+    font-feature-settings: "tnum";
+  }
+
+  .high {
+    font-weight: 600;
+  }
+}
+
+.manifold-weather-error {
+  padding: $space-5 0;
+}

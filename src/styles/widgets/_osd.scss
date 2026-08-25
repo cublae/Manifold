@@ -1,0 +1,46 @@
+@use "../tokens" as *;
+
+.manifold-osd {
+  margin: $space-5 * 2;
+  padding: $space-4 $space-5;
+  box-shadow: 0 4px 16px 2px $shade;
+
+  .manifold-osd-value {
+    font-weight: 700;
+    font-feature-settings: "tnum";
+  }
+
+  // The picked colour, shown as itself. The border is what keeps a swatch the
+  // same shade as the panel from disappearing into it -- white on light, black
+  // on dark -- and it is drawn in the foreground colour for that reason.
+  .manifold-osd-swatch {
+    border-radius: $radius-sm;
+    border: 1px solid gtkalpha($fg, 0.3);
+  }
+
+  // Square by default; `osd.barRadius` rewrites both radii at runtime, so the
+  // two rules below are the fallback for a shell running without a config.
+  levelbar.manifold-osd-bar {
+    min-height: 6px;
+
+    trough {
+      background-color: gtkalpha($fg, 0.15);
+      border-radius: 0;
+      min-height: 6px;
+    }
+
+    // Adwaita draws the unfilled part as a node of its own, on top of the
+    // trough and without its rounding, so left alone it shows as a square box
+    // around the rounded track. The trough already provides the colour.
+    block.empty {
+      background-color: transparent;
+      border: none;
+    }
+
+    block.filled {
+      background-color: $accent-bg;
+      border-radius: 0;
+      min-height: 6px;
+    }
+  }
+}
