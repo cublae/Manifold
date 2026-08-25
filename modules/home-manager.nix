@@ -201,8 +201,17 @@ in
       default = true;
       description = ''
         Start Manifold from a systemd user service bound to
-        graphical-session.target. Disable this if you would rather launch it
-        from niri's own {option}`spawn-at-startup`.
+        graphical-session.target.
+
+        Turn this off to start the shell from niri's own `spawn-at-startup`
+        instead. The service is what restarts Manifold if it ever exits, so
+        without it a crash leaves you with no panel until the next login.
+
+        With niri's Home Manager module imported, set
+        {option}`programs.manifold.niri.spawnAtStartup` to have the entry
+        written for you. With a hand-written config.kdl, add it yourself:
+
+            spawn-at-startup "manifold"
       '';
     };
 
@@ -212,9 +221,14 @@ in
       description = ''
         Add Manifold to {option}`programs.niri.settings.spawn-at-startup`.
 
-        Requires the niri Home Manager module to be imported. Prefer
-        {option}`programs.manifold.systemd.enable`, which restarts the shell if
-        it crashes and orders it against the rest of the graphical session.
+        Only useful when niri's own Home Manager module is imported, since
+        that is what declares the option being written to; enabling it
+        without the module is an error rather than a silent no-op. People who
+        keep a hand-written config.kdl want the `spawn-at-startup "manifold"`
+        line in it instead, and this option off.
+
+        Either way, turn {option}`programs.manifold.systemd.enable` off, or
+        the shell is started twice.
       '';
     };
 
@@ -868,13 +882,33 @@ in
           {
             assertion = cfg.niri.spawnAtStartup -> hasNiriModule;
             message = ''
-              programs.manifold.niri.spawnAtStartup needs niri's own Home
-              Manager module, which is not imported. Either import it, or
-              leave the option off and let programs.manifold.systemd.enable
-              start the shell.
+              programs.manifold.niri.spawnAtStartup writes into
+              programs.niri.settings, which needs niri's own Home Manager
+              module -- and that module is not imported.
+
+              If you keep niri's configuration in a hand-written config.kdl,
+              leave this option off and put the line there yourself:
+
+                spawn-at-startup "manifold"
+
+              Everything else about programs.manifold works either way.
             '';
           }
         ];
+
+        # Nothing is going to start the shell, and Nix is the only place that
+        # can tell: someone who turns systemd off and forgets the other half
+        # would otherwise just get a login with no panel and no clue why.
+        warnings = lib.optional (!cfg.systemd.enable && !cfg.niri.spawnAtStartup) ''
+          programs.manifold is enabled, but neither systemd.enable nor
+          niri.spawnAtStartup is on, so nothing starts the shell at login.
+
+          Add it to your niri config by hand:
+
+            spawn-at-startup "manifold"
+
+          or set programs.manifold.systemd.enable back to true.
+        '';
 
         home.packages = [ cfg.package ];
 

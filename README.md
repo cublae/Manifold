@@ -49,14 +49,50 @@ nix run .
 libadwaita. Сборке нужны `pkgs.astal` и `pkgs.ags`, то есть достаточно свежий
 nixpkgs; на stable-ветке `follows` придётся убрать.
 
-Запуск можно отдать не systemd, а самому niri:
+### Запуск без systemd, из автостарта niri
+
+По умолчанию модуль заводит systemd-юзер-сервис. Запуск можно отдать вместо
+этого самому niri — как именно, зависит от того, чем у вас сделан его конфиг.
+
+**Конфиг niri пишется руками** (`~/.config/niri/config.kdl`) — самый частый
+случай, в том числе когда сам композитор включён на системном уровне через
+`programs.niri.enable`. Выключите сервис в home-manager:
 
 ```nix
 programs.manifold = {
+  enable = true;
   systemd.enable = false;
-  niri.spawnAtStartup = true;   # требует импортированного модуля programs.niri
 };
 ```
+
+и добавьте строку в `config.kdl`:
+
+```kdl
+spawn-at-startup "manifold"
+```
+
+Искать бинарь по имени достаточно: home-manager кладёт пакет в профиль, а niri
+передаёт детям свой `PATH` вместе с `NIRI_SOCKET` и `WAYLAND_DISPLAY` — больше
+шеллу ничего не нужно. Если забыть про эту строку, home-manager при сборке
+предупредит, что шелл никто не запускает.
+
+**Конфиг niri генерируется home-manager** (импортирован модуль `programs.niri`)
+— тогда строку впишет сам модуль:
+
+```nix
+programs.manifold = {
+  enable = true;
+  systemd.enable = false;
+  niri.spawnAtStartup = true;
+};
+```
+
+Включать `niri.spawnAtStartup` без импортированного модуля niri нельзя — сборка
+остановится с объяснением, а не молча ничего не сделает.
+
+Чем при этом жертвуете: systemd-сервис перезапускает шелл, если тот упал, и
+упорядочивает его относительно `graphical-session.target`. Из автостарта niri
+падение означает сессию без панели до следующего входа.
 
 Готовый пример настройки:
 
@@ -353,8 +389,8 @@ Home Manager не используется. Указывать нужно тол
 | --- | --- | --- |
 | `programs.manifold.enable` | `false` | Включить Manifold |
 | `programs.manifold.package` | пакет из этого флейка | Какой пакет ставить |
-| `programs.manifold.systemd.enable` | `true` | Запускать из systemd-юзер-сервиса, привязанного к `graphical-session.target` |
-| `programs.manifold.niri.spawnAtStartup` | `false` | Добавить Manifold в `programs.niri.settings.spawn-at-startup`. Нужен импортированный модуль niri. systemd предпочтительнее: он перезапустит шелл после падения |
+| `programs.manifold.systemd.enable` | `true` | Запускать из systemd-юзер-сервиса, привязанного к `graphical-session.target`. Выключается ради автостарта niri — см. [раздел выше](#запуск-без-systemd-из-автостарта-niri) |
+| `programs.manifold.niri.spawnAtStartup` | `false` | Добавить Manifold в `programs.niri.settings.spawn-at-startup`. Работает только с импортированным модулем niri, иначе сборка остановится с объяснением; для конфига, написанного руками, строка `spawn-at-startup "manifold"` пишется в `config.kdl` самостоятельно. systemd предпочтительнее: он перезапустит шелл после падения |
 | `programs.manifold.settings` | `{}` | Произвольный JSON поверх сгенерированного конфига. Для ключей, у которых своей опции пока нет |
 
 Источник правды по полям — [`src/config/schema.ts`](src/config/schema.ts), там
