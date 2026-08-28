@@ -108,11 +108,22 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
   const tooltip = () => button.set_tooltip_markup(item.tooltipMarkup || item.title || "")
   tooltip()
 
+  // A registered item is not always a drawable one. An application can claim a
+  // tray slot and then publish nothing the watcher can read back -- Electron
+  // registers an object path that answers no properties at all -- and a button
+  // with no icon in it is a hole in the bar rather than an indicator. So the
+  // button follows whether there is something to draw, and comes back on its
+  // own if the icon turns up later, which is common: applications routinely
+  // register first and fill in their properties a moment after.
+  const followIcon = () => button.set_visible(item.gicon !== null)
+  followIcon()
+
   const handlers = [
     item.connect("notify::menu-model", applyMenu),
     item.connect("notify::action-group", applyMenu),
     item.connect("notify::tooltip-markup", tooltip),
     item.connect("notify::title", tooltip),
+    item.connect("notify::gicon", followIcon),
   ]
 
   button.connect("destroy", () => {
