@@ -1,9 +1,11 @@
 import { Gtk } from "ags/gtk4"
-import { createBinding } from "ags"
+import { createBinding, createComputed, createState } from "ags"
 
+import type Gio from "gi://Gio"
 import type AstalTrayNS from "gi://AstalTray"
 import * as system from "../../../services/system"
 import { captureScope } from "../../../lib/scope"
+import { FallbackItem } from "../../../services/trayFallback"
 import { moduleOrientation } from "../../../lib/barLayout"
 import type { BarPosition } from "../../../config"
 
@@ -45,7 +47,20 @@ function menuPosition(position: BarPosition): Gtk.PositionType {
 
 function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget {
   const button = new Gtk.Button({ cssClasses: ["manifold-tray-item"] })
-  button.set_child((<image gicon={createBinding(item, "gicon")} />) as Gtk.Widget)
+  // Astal's icon when it has one, ours when it does not: an item whose proxy
+  // landed on a path that answers nothing arrives with a null gicon and stays
+  // that way, so the only icon it will ever have is the one read directly.
+  const [rescued, setRescued] = createState<Gio.Icon | null>(null)
+  const icon = createComputed(
+    [createBinding(item, "gicon"), rescued],
+    (fromAstal, fromUs) => fromAstal ?? fromUs,
+  )
+  button.set_child((<image gicon={icon} />) as Gtk.Widget)
+
+  // Kept so the click handlers can reach the item the same way Astal's would,
+  // and so the signal subscription can be dropped along with the button.
+  let fallback: FallbackItem | null = null
+  let unsubscribe: (() => void) | null = null
 
   // The menu is a popover parented to the button rather than a MenuButton's
   // own, so that opening it is something this code decides rather than a side
@@ -84,15 +99,24 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
       openMenu()
       return
     }
-    item.activate(0, 0)
+    // The live proxy first: a rescued item is the exception, not the rule.
+    if (item.id) item.activate(0, 0)
+    else fallback?.activate(0, 0)
   })
 
   const secondary = new Gtk.GestureClick({ button: 3 })
-  secondary.connect("pressed", () => openMenu())
+  secondary.connect("pressed", () => {
+    // An item reached directly has no menu model to build a popover from, so
+    // the menu it gets is the one the application puts up itself.
+    if (!openMenu()) fallback?.contextMenu(0, 0)
+  })
   button.add_controller(secondary)
 
   const middle = new Gtk.GestureClick({ button: 2 })
-  middle.connect("pressed", () => item.secondary_activate(0, 0))
+  middle.connect("pressed", () => {
+    if (item.id) item.secondary_activate(0, 0)
+    else fallback?.secondaryActivate(0, 0)
+  })
   button.add_controller(middle)
 
   const scroll = new Gtk.EventControllerScroll({
@@ -108,15 +132,41 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
   const tooltip = () => button.set_tooltip_markup(item.tooltipMarkup || item.title || "")
   tooltip()
 
-  // A registered item is not always a drawable one. An application can claim a
-  // tray slot and then publish nothing the watcher can read back -- Electron
-  // registers an object path that answers no properties at all -- and a button
-  // with no icon in it is a hole in the bar rather than an indicator. So the
-  // button follows whether there is something to draw, and comes back on its
-  // own if the icon turns up later, which is common: applications routinely
-  // register first and fill in their properties a moment after.
-  const followIcon = () => button.set_visible(item.gicon !== null)
+  // A registered item is not always a drawable one, and the button follows
+  // whether there is anything to draw -- from either source. It is reactive
+  // rather than a test at construction time because registering first and
+  // filling in properties a moment later is normal behaviour.
+  const followIcon = () => button.set_visible(item.gicon !== null || rescued.get() !== null)
   followIcon()
+
+  /**
+   * Read the item ourselves when Astal could not.
+   *
+   * Only for items that arrive with nothing at all: a null gicon here means
+   * the proxy is answering from a path that holds no object, and waiting for
+   * it to fill in would be waiting forever.
+   */
+  const rescue = async () => {
+    // Not merely slow: an item that is only late still has its id, and will
+    // notify when its icon arrives. This one has nothing and never will.
+    if (item.gicon !== null || item.id || fallback !== null) return
+
+    const found = await FallbackItem.locate(item.itemId)
+    if (!found) return
+    fallback = found
+
+    const refresh = async () => {
+      setRescued(await found.icon())
+      followIcon()
+      const label = await found.label()
+      if (label) button.set_tooltip_markup(label)
+    }
+
+    unsubscribe = found.subscribe(() => void refresh())
+    await refresh()
+  }
+
+  void rescue().catch((error) => console.error(`manifold: tray item unread: ${error}`))
 
   const handlers = [
     item.connect("notify::menu-model", applyMenu),
@@ -128,6 +178,9 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
 
   button.connect("destroy", () => {
     for (const id of handlers) item.disconnect(id)
+    unsubscribe?.()
+    unsubscribe = null
+    fallback = null
     // A popover outlives its parent unless unparented, and GTK complains.
     popover?.unparent()
     popover = null
