@@ -6,6 +6,7 @@ import type AstalTrayNS from "gi://AstalTray"
 import * as system from "../../../services/system"
 import { captureScope } from "../../../lib/scope"
 import { FallbackItem } from "../../../services/trayFallback"
+import type { DBusMenu } from "../../../services/dbusMenu"
 import { moduleOrientation } from "../../../lib/barLayout"
 import type { BarPosition } from "../../../config"
 
@@ -60,6 +61,7 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
   // Kept so the click handlers can reach the item the same way Astal's would,
   // and so the signal subscription can be dropped along with the button.
   let fallback: FallbackItem | null = null
+  let rescuedMenu: DBusMenu | null = null
   let unsubscribe: (() => void) | null = null
 
   // The menu is a popover parented to the button rather than a MenuButton's
@@ -67,11 +69,10 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
   // effect of the button being pressed.
   let popover: Gtk.PopoverMenu | null = null
 
-  const applyMenu = () => {
+  const attachMenu = (model: Gio.MenuModel | null, actions: Gio.ActionGroup | null) => {
     popover?.unparent()
     popover = null
 
-    const model = item.menuModel
     if (!model) return
 
     popover = Gtk.PopoverMenu.new_from_model(model)
@@ -80,17 +81,45 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
     // Open away from the screen edge the bar is on, or the menu lands
     // half off-screen on a bottom or side bar.
     popover.set_position(menuPosition(position))
-    button.insert_action_group(ACTION_GROUP, item.actionGroup)
+    button.insert_action_group(ACTION_GROUP, actions)
   }
+
+  const applyMenu = () => attachMenu(item.menuModel, item.actionGroup)
   applyMenu()
 
   const openMenu = () => {
-    if (!popover) return false
+    // A rescued item always goes the other way, even once it has a popover:
+    // that popover is one we built, and refreshing it means asking the
+    // application again rather than notifying a proxy that answers nothing.
+    if (fallback || !popover) return false
     // Lets the application refresh its menu before it is shown, which is what
     // dbusmenu clients expect and what keeps stale entries out.
     item.about_to_show()
     popover.popup()
     return true
+  }
+
+  /**
+   * The same, for an item we had to read ourselves.
+   *
+   * Built on every opening rather than kept around: the application is asked
+   * to refresh the menu first, and rebuilding a popover that is already on
+   * screen would only close it.
+   */
+  const openRescuedMenu = async () => {
+    if (!fallback) return
+
+    rescuedMenu ??= await fallback.menu()
+    if (!rescuedMenu) {
+      // Nothing to build from, so the last resort is asking the application to
+      // put up its own menu -- which is a poor one, but better than nothing.
+      fallback.contextMenu(0, 0)
+      return
+    }
+
+    await rescuedMenu.aboutToShow()
+    attachMenu(rescuedMenu.model(), rescuedMenu.actionGroup)
+    popover?.popup()
   }
 
   button.connect("clicked", () => {
@@ -106,9 +135,10 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
 
   const secondary = new Gtk.GestureClick({ button: 3 })
   secondary.connect("pressed", () => {
-    // An item reached directly has no menu model to build a popover from, so
-    // the menu it gets is the one the application puts up itself.
-    if (!openMenu()) fallback?.contextMenu(0, 0)
+    if (openMenu()) return
+    void openRescuedMenu().catch((error) =>
+      console.error(`manifold: tray menu unread: ${error}`),
+    )
   })
   button.add_controller(secondary)
 
@@ -181,6 +211,7 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
     unsubscribe?.()
     unsubscribe = null
     fallback = null
+    rescuedMenu = null
     // A popover outlives its parent unless unparented, and GTK complains.
     popover?.unparent()
     popover = null

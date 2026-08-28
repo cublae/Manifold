@@ -2,6 +2,8 @@ import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import GdkPixbuf from "gi://GdkPixbuf"
 
+import { DBusMenu } from "./dbusMenu"
+
 /**
  * Reading a tray item that AstalTray registered but cannot talk to.
  *
@@ -209,8 +211,35 @@ export class FallbackItem {
     return pixmap ? pixbuf(pixmap) : null
   }
 
-  /** Whatever the item is willing to be called, for the tooltip. */
+  /**
+   * The item's own menu, read straight from its dbusmenu.
+   *
+   * This is the menu Astal would have built had it been able to talk to the
+   * item at all, and it is worth the trouble: the alternative is `ContextMenu`,
+   * which Electron answers by drawing a surface the size of the screen.
+   */
+  async menu(): Promise<DBusMenu | null> {
+    const value = await getProperty(this.connection, this.name, this.path, "Menu")
+    const path = value?.get_type_string() === "o" ? value.get_string()[0] : null
+    if (!path || path === "/") return null
+
+    return DBusMenu.open(this.connection, this.name, path)
+  }
+
+  /**
+   * Whatever the item is willing to be called, for the tooltip.
+   *
+   * `ToolTip` first, since that is the one written to be read by a person:
+   * its title is "Vesktop" where `Id` is "vesktop_status_icon_1". `Id` is the
+   * last resort precisely because it is an identifier, not a name.
+   */
   async label(): Promise<string> {
+    const tip = await getProperty(this.connection, this.name, this.path, "ToolTip")
+    if (tip?.get_type_string() === "(sa(iiay)ss)") {
+      const title = tip.get_child_value(2).get_string()[0]
+      if (title) return title
+    }
+
     const title = await getString(this.connection, this.name, this.path, "Title")
     return title || (await getString(this.connection, this.name, this.path, "Id"))
   }
