@@ -22,6 +22,57 @@ function shared(): Soup.Session {
 
 export class HttpError extends Error {}
 
+export interface RequestOptions {
+  /** Defaults to GET. */
+  method?: string
+  headers?: Record<string, string>
+  /** Sent as `application/json`. */
+  json?: unknown
+}
+
+/**
+ * Perform a request and return the body as text.
+ *
+ * A 2xx with no body is a perfectly good answer to a PUT or a PATCH, so unlike
+ * `getText` this one resolves to the empty string rather than treating it as a
+ * failure.
+ */
+export function request(url: string, options: RequestOptions = {}): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const message = Soup.Message.new(options.method ?? "GET", url)
+    if (!message) {
+      reject(new HttpError(`not a usable URL: ${url}`))
+      return
+    }
+
+    for (const [name, value] of Object.entries(options.headers ?? {})) {
+      message.get_request_headers().append(name, value)
+    }
+
+    if (options.json !== undefined) {
+      const body = new TextEncoder().encode(JSON.stringify(options.json))
+      message.set_request_body_from_bytes("application/json", new GLib.Bytes(body))
+    }
+
+    shared().send_and_read_async(message, GLib.PRIORITY_DEFAULT, null, (self, result) => {
+      try {
+        const bytes = self?.send_and_read_finish(result)
+        const status = message.get_status()
+
+        if (status < 200 || status >= 300) {
+          reject(new HttpError(`${url} answered ${status}`))
+          return
+        }
+
+        const data = bytes?.get_data()
+        resolve(data ? new TextDecoder().decode(data) : "")
+      } catch (error) {
+        reject(new HttpError(`${url}: ${error}`))
+      }
+    })
+  })
+}
+
 /** GET `url` and return the body as text. Rejects on anything but 2xx. */
 export function getText(url: string): Promise<string> {
   return new Promise((resolve, reject) => {

@@ -340,6 +340,8 @@ export interface ThemeConfig {
 /** Feature switches for modules beyond the bar. */
 export interface ModulesConfig {
   controlCenter: boolean
+  /** The mihomo proxy tile. Hidden anyway when MihomoManifold is not installed. */
+  proxy: boolean
   notifications: boolean
   launcher: boolean
   clipboard: boolean
@@ -489,6 +491,7 @@ export const defaultConfig: ManifoldConfig = {
   },
   modules: {
     controlCenter: true,
+    proxy: true,
     notifications: true,
     launcher: true,
     clipboard: true,

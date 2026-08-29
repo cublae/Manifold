@@ -4,6 +4,7 @@ import { createBinding, createComputed, createState } from "ags"
 
 import * as system from "../../services/system"
 import { pickColor } from "../../services/colorPicker"
+import * as mihomo from "../../services/mihomo"
 import { config } from "../../config"
 import BatteryService from "../../services/battery"
 import Recorder from "../../services/recorder"
@@ -23,6 +24,7 @@ import MediaCard from "./MediaCard"
 import MixerPage from "./MixerPage"
 import SessionPage from "./SessionPage"
 import NetworkPage from "./NetworkPage"
+import ProxyPage from "./ProxyPage"
 import QuickTile from "./QuickTile"
 
 /**
@@ -160,6 +162,55 @@ async function PowerTile(inScope: InScope): Promise<Gtk.Widget | null> {
       },
     }),
   )
+}
+
+/**
+ * The mihomo proxy core.
+ *
+ * Absent unless its front-end is installed, which is what the config file
+ * standing there means. Clicking moves between routing by rules and letting
+ * everything past the proxy -- the two states worth a single click -- and the
+ * chevron opens the node picker.
+ */
+async function ProxyTile(inScope: InScope, expand: () => void): Promise<Gtk.Widget | null> {
+  if (!config.get().modules.proxy) return null
+
+  await mihomo.refresh()
+  if (!mihomo.state.get().configured) return null
+
+  const tile = inScope(() =>
+    QuickTile({
+      icon: mihomo.state.as((s) =>
+        s.running && s.mode !== "direct" ? "network-vpn-symbolic" : "network-vpn-disabled-symbolic",
+      ),
+      label: _("Proxy"),
+      subtitle: mihomo.state.as((s) => {
+        if (!s.running) return _("Off")
+        if (s.mode === "direct") return _("Direct")
+        return mihomo.currentNode(s) || _(s.mode === "global" ? "Global" : "Rules")
+      }),
+      active: mihomo.state.as((s) => s.running && s.mode !== "direct"),
+      onClicked: () => {
+        const current = mihomo.state.get()
+        if (!current.running) return
+        void mihomo.setMode(current.mode === "direct" ? "rule" : "direct")
+      },
+      onExpand: expand,
+    }),
+  )
+
+  // Polled only while the panel is on screen. The tile is unmapped with it, so
+  // its own mapping is the signal -- no need for the window to tell anyone.
+  let stop: (() => void) | null = null
+  tile.connect("map", () => {
+    stop ??= mihomo.poll()
+  })
+  tile.connect("unmap", () => {
+    stop?.()
+    stop = null
+  })
+
+  return tile
 }
 
 function RecordTile(inScope: InScope): Gtk.Widget | null {
@@ -378,6 +429,7 @@ export default function ControlCenter(): Astal.Window {
 
   stack.add_named(main, "main")
   stack.add_named(NetworkPage({ back }), "wifi")
+  stack.add_named(ProxyPage({ back }), "proxy")
   stack.add_named(BluetoothPage({ back }), "bluetooth")
   stack.add_named(MixerPage({ back }), "mixer")
   stack.add_named(SessionPage({ back }), "session")
@@ -402,6 +454,7 @@ export default function ControlCenter(): Astal.Window {
     const tiles: Array<Gtk.Widget | null> = [
       await InternetTile(inScope, show("wifi")),
       await BluetoothTile(inScope, show("bluetooth")),
+      await ProxyTile(inScope, show("proxy")),
       await PowerTile(inScope),
       RecordTile(inScope),
       ScreenshotTile(inScope),

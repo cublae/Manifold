@@ -263,3 +263,73 @@ button.manifold-slider-expand.active {
     background-color: gtkshade($accent-bg, 1.08);
   }
 }
+
+// -- proxy page -------------------------------------------------------------
+
+// The three routing modes, side by side. They are one choice, so the lit one
+// carries the accent the same way an active tile does.
+.manifold-proxy-modes button {
+  padding: $space-2 $space-3;
+
+  &.active {
+    background-color: $accent-bg;
+    color: $accent-fg;
+
+    &:hover {
+      background-color: gtkshade($accent-bg, 1.08);
+    }
+  }
+}
+
+// A group's header: its name, the node it is on, and the chevron.
+button.manifold-proxy-group {
+  padding: $space-2 $space-3;
+
+  .title {
+    font-weight: 700;
+  }
+
+  .subtitle {
+    opacity: 0.7;
+  }
+}
+
+button.manifold-proxy-node {
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  background-color: transparent;
+  padding: $space-2 $space-3;
+  border-radius: $radius-sm;
+  transition: background-color $transition;
+
+  &:hover {
+    background-color: gtkalpha($fg, 0.08);
+  }
+
+  // The node in use is marked rather than filled: a list where one row is a
+  // block of accent colour reads as a selection you are making, not one that
+  // is already in force.
+  &.active {
+    background-color: gtkalpha($accent-bg, 0.18);
+    color: $accent;
+  }
+
+  // Latency, in the three bands anyone reads a ping in.
+  .delay {
+    font-size: 0.8rem;
+    font-feature-settings: "tnum";
+
+    &.good {
+      color: $success;
+    }
+
+    &.fair {
+      color: $warning;
+    }
+
+    &.poor {
+      color: $destructive;
+    }
+  }
+}

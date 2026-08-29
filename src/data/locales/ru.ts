@@ -128,4 +128,15 @@ export const ru: Record<string, string> = {
   "Microphone in use": "Микрофон используется",
   "Camera in use": "Камера используется",
   "Capturing the screen": "Идёт захват экрана",
+
+  // -- proxy ----------------------------------------------------------------
+  Proxy: "Прокси",
+  Rules: "По правилам",
+  Global: "Через прокси",
+  Direct: "Напрямую",
+  "Route by the core's rule list": "Маршрутизация по списку правил ядра",
+  "Everything through the proxy": "Весь трафик через прокси",
+  "Everything past the proxy": "Весь трафик мимо прокси",
+  "Test latency": "Проверить задержку",
+  "The core is not running": "Ядро не запущено",
 }

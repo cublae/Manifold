@@ -97,6 +97,7 @@ let
     modules = prune {
       inherit (cfg.modules)
         controlCenter
+        proxy
         notifications
         launcher
         osd
@@ -831,6 +832,19 @@ in
         type = types.nullOr types.bool;
         default = null;
         description = "Build the control center panel.";
+      };
+
+      proxy = mkOption {
+        type = types.nullOr types.bool;
+        default = null;
+        description = ''
+          Show the mihomo proxy tile in the control center.
+
+          It appears only when MihomoManifold is installed -- the shell reads
+          the address and secret of the core's controller from that
+          application's own settings -- so this is for turning it off on a
+          machine where it is installed but not wanted.
+        '';
       };
 
       notifications = mkOption {

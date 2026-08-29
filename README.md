@@ -375,6 +375,7 @@ Home Manager не используется. Указывать нужно тол
 | Ключ конфига | Опция Home Manager | По умолчанию | Что делает |
 | --- | --- | --- | --- |
 | `modules.controlCenter` | `modules.controlCenter` | `true` | Центр управления |
+| `modules.proxy` | `modules.proxy` | `true` | Плитка прокси в центре управления. Появляется только если установлен [MihomoManifold](https://github.com/cublae/mihomo-manifold): адрес и секрет контроллера ядра шелл берёт из его собственных настроек. Плитка переключает «по правилам ↔ напрямую», а по шеврону открывается выбор узла с проверкой задержки |
 | `modules.notifications` | `modules.notifications` | `true` | Демон уведомлений, всплывашки и центр уведомлений. Имя на шине freedesktop может держать только один процесс — выключай, если уведомления обслуживает другой шелл |
 | `modules.launcher` | `modules.launcher` | `true` | Лаунчер |
 | `modules.clipboard` | — (`settings`) | `true` | История буфера |
