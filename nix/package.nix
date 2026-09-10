@@ -1,6 +1,7 @@
 {
   lib,
   stdenvNoCC,
+  runtimeShell,
   ags,
   astal,
   gjs,
@@ -120,6 +121,12 @@ stdenvNoCC.mkDerivation {
     dconf
   ];
 
+  # The shell is wrapped by hand rather than by the hook, so that the dispatcher
+  # in $out/bin is left alone. It has no GTK to set up -- it makes one D-Bus
+  # call -- and a wrapper around it would be pure startup cost on the path that
+  # exists to avoid startup cost.
+  dontWrapGApps = true;
+
   preFixup = ''
     gappsWrapperArgs+=(
       # The style watcher shells out to sass; the clipboard service to cliphist,
@@ -130,6 +137,8 @@ stdenvNoCC.mkDerivation {
       # gtk4-layer-shell is preloaded ahead of libgtk.
       --set LD_PRELOAD "${gtk4-layer-shell}/lib/libgtk4-layer-shell.so"
     )
+
+    wrapProgram $out/libexec/manifold-shell "''${gappsWrapperArgs[@]}"
   '';
 
   # esbuild resolves everything from the source tree; there is nothing to
@@ -139,17 +148,26 @@ stdenvNoCC.mkDerivation {
   installPhase = ''
     runHook preInstall
 
-    mkdir -p $out/bin $out/share/manifold
+    mkdir -p $out/bin $out/libexec $out/share/manifold
     cp -r ./* $out/share/manifold
 
-    ags bundle src/app.ts $out/bin/manifold --gtk 4 -d "SRC='$out/share/manifold'"
-    chmod +x $out/bin/manifold
+    # The bundle sits in libexec, and $out/bin/manifold is the dispatcher in
+    # front of it: starting this is what costs a third of a second, and only
+    # the invocation that really is the shell should have to pay it.
+    ags bundle src/app.ts $out/libexec/manifold-shell --gtk 4 -d "SRC='$out/share/manifold'"
+    chmod +x $out/libexec/manifold-shell
 
     # `ags bundle` does not always emit a shebang; without one the wrapper has
     # nothing to exec.
-    if ! head -n 1 "$out/bin/manifold" | grep -q '^#!'; then
-      sed -i '1i #!${gjs}/bin/gjs -m' "$out/bin/manifold"
+    if ! head -n 1 "$out/libexec/manifold-shell" | grep -q '^#!'; then
+      sed -i '1i #!${gjs}/bin/gjs -m' "$out/libexec/manifold-shell"
     fi
+
+    substitute ${./dispatch.sh} $out/bin/manifold \
+      --replace-fail '#!/bin/sh' "#!${runtimeShell}" \
+      --replace-fail '@real@' "$out/libexec/manifold-shell" \
+      --replace-fail '@gdbus@' "${glib.bin}/bin/gdbus"
+    chmod +x $out/bin/manifold
 
     runHook postInstall
   '';
