@@ -46,7 +46,12 @@ function menuPosition(position: BarPosition): Gtk.PositionType {
   }
 }
 
-function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget {
+function TrayItem(
+  item: AstalTrayNS.TrayItem,
+  position: BarPosition,
+  /** Called when a rescued item's application quits, since Astal will not. */
+  onGone: () => void,
+): Gtk.Widget {
   const button = new Gtk.Button({ cssClasses: ["manifold-tray-item"] })
   // Astal's icon when it has one, ours when it does not: an item whose proxy
   // landed on a path that answers nothing arrives with a null gicon and stays
@@ -63,6 +68,7 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
   let fallback: FallbackItem | null = null
   let rescuedMenu: DBusMenu | null = null
   let unsubscribe: (() => void) | null = null
+  let unsubscribeGone: (() => void) | null = null
 
   // The menu is a popover parented to the button rather than a MenuButton's
   // own, so that opening it is something this code decides rather than a side
@@ -193,6 +199,7 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
     }
 
     unsubscribe = found.subscribe(() => void refresh())
+    unsubscribeGone = found.whenGone(onGone)
     await refresh()
   }
 
@@ -210,6 +217,8 @@ function TrayItem(item: AstalTrayNS.TrayItem, position: BarPosition): Gtk.Widget
     for (const id of handlers) item.disconnect(id)
     unsubscribe?.()
     unsubscribe = null
+    unsubscribeGone?.()
+    unsubscribeGone = null
     fallback = null
     rescuedMenu = null
     // A popover outlives its parent unless unparented, and GTK complains.
@@ -237,7 +246,7 @@ export default function Tray({ position }: { position: BarPosition }): Gtk.Widge
 
     const add = (item: AstalTrayNS.TrayItem) => {
       if (widgets.has(item.itemId)) return
-      const widget = inScope(() => TrayItem(item, position))
+      const widget = inScope(() => TrayItem(item, position, () => remove(item.itemId)))
       widgets.set(item.itemId, widget)
       box.append(widget)
       box.set_visible(true)

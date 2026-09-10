@@ -279,6 +279,35 @@ export class FallbackItem {
     this.send("ContextMenu", x, y)
   }
 
+  /**
+   * Call back when the application behind this item goes away.
+   *
+   * Astal notices that for every item it can talk to, and never for these. It
+   * watches the string it recorded for a change of owner, and for these that
+   * string is a bus name with an object path glued onto it -- something no
+   * name owner can ever match -- so the item is never withdrawn and its icon
+   * sits on the bar after the application has quit. The real bus name is
+   * watched here instead.
+   */
+  whenGone(onGone: () => void): () => void {
+    const id = this.connection.signal_subscribe(
+      "org.freedesktop.DBus",
+      "org.freedesktop.DBus",
+      "NameOwnerChanged",
+      "/org/freedesktop/DBus",
+      // Matched on the name itself, so this wakes for nothing else.
+      this.name,
+      Gio.DBusSignalFlags.NONE,
+      (_connection, _sender, _path, _iface, _signal, parameters) => {
+        // (name, old owner, new owner) -- an empty new owner is the departure.
+        const owner = parameters.get_child_value(2).get_string()[0]
+        if (!owner) onGone()
+      },
+    )
+
+    return () => this.connection.signal_unsubscribe(id)
+  }
+
   /** Watch for the item swapping its icon, e.g. an unread badge appearing. */
   subscribe(onChange: () => void): () => void {
     const ids = ["NewIcon", "NewStatus", "NewTitle"].map((signal) =>
