@@ -33,7 +33,7 @@ export const ru: Record<string, string> = {
   Wired: "Кабель",
   "Not connected": "Не подключено",
   "Volume mixer": "Микшер",
-  "Mute microphone": "Выключить микрофон",
+  "Input devices": "Устройства ввода",
   Volume: "Громкость",
   Microphone: "Микрофон",
   Brightness: "Яркость",
@@ -69,6 +69,7 @@ export const ru: Record<string, string> = {
   Input: "Ввод",
   Applications: "Приложения",
   "Nothing is playing": "Ничего не играет",
+  "Nothing is recording": "Никто не пишет",
   "No audio server": "Аудиосервер недоступен",
 
   // -- notifications --------------------------------------------------------

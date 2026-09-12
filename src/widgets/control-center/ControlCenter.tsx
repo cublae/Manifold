@@ -431,7 +431,8 @@ export default function ControlCenter(): Astal.Window {
   stack.add_named(NetworkPage({ back }), "wifi")
   stack.add_named(ProxyPage({ back }), "proxy")
   stack.add_named(BluetoothPage({ back }), "bluetooth")
-  stack.add_named(MixerPage({ back }), "mixer")
+  stack.add_named(MixerPage({ back, kind: "output" }), "mixer")
+  stack.add_named(MixerPage({ back, kind: "input" }), "mixer-input")
   stack.add_named(SessionPage({ back }), "session")
   stack.set_visible_child_name("main")
 
@@ -518,9 +519,9 @@ export default function ControlCenter(): Astal.Window {
     if (microphone) {
       const muted = createBinding(microphone, "mute")
 
-      // Same split as the volume row: the slider keeps its width, the button
-      // beside it is a second target -- here the mute, which used to live in
-      // the bar and belongs next to the level it silences.
+      // Same split as the volume row, and the same destination: the button
+      // beside the slider opens the device lists, so picking which microphone
+      // is in use takes the same gesture as picking which speaker is.
       const row = new Gtk.Box({
         orientation: Gtk.Orientation.HORIZONTAL,
         spacing: 6,
@@ -548,17 +549,11 @@ export default function ControlCenter(): Astal.Window {
       row.append(
         inScope(() => (
           <button
-            cssClasses={muted.as((mute) =>
-              mute ? ["manifold-slider-expand", "active"] : ["manifold-slider-expand"],
-            )}
-            tooltipText={_("Mute microphone")}
-            onClicked={() => (microphone.mute = !microphone.mute)}
+            cssClasses={["manifold-slider-expand"]}
+            tooltipText={_("Input devices")}
+            onClicked={show("mixer-input")}
           >
-            <image
-              iconName={muted.as((mute) =>
-                mute ? "microphone-disabled-symbolic" : "audio-input-microphone-symbolic",
-              )}
-            />
+            <image iconName="go-next-symbolic" />
           </button>
         ) as Gtk.Widget),
       )

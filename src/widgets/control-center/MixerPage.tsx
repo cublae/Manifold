@@ -9,20 +9,28 @@ import { captureScope } from "../../lib/scope"
 import FatSlider from "./FatSlider"
 
 /**
- * Per-application volume.
+ * Devices and per-application volume, for one side of the audio graph.
  *
  * WirePlumber calls a playing application a *stream*, and every stream carries
  * its own volume and mute, so the mixer is one slider per stream over the same
- * control the main page uses for the output as a whole.
+ * control the main page uses for the endpoint as a whole.
+ *
+ * Playback and capture get a page each rather than sharing one. They are
+ * reached from different sliders and answer different questions -- "which
+ * speakers, and what is loud" against "which microphone, and who is listening"
+ * -- and a single list where half of it is never what you came for is a list
+ * you have to read past every time.
  *
  * The list is bound rather than rebuilt: a slider that is torn down and rebuilt
  * under a dragging pointer loses the drag, and streams come and go constantly
- * as applications start and stop playing.
+ * as applications start and stop.
  */
 
 export interface MixerPageProps {
   /** Return to the main quick-settings page. */
   back: () => void
+  /** Which side of the graph: playback devices and streams, or capture. */
+  kind: "output" | "input"
 }
 
 function volumeIcon(stream: AstalWpNS.Stream): string {
@@ -132,7 +140,9 @@ function Section(title: string, body: Gtk.Widget): Gtk.Widget {
   return box
 }
 
-export default function MixerPage({ back }: MixerPageProps): Gtk.Widget {
+export default function MixerPage({ back, kind }: MixerPageProps): Gtk.Widget {
+  const output = kind === "output"
+
   const inScope = captureScope()
 
   const list = new Gtk.Box({
@@ -163,7 +173,12 @@ export default function MixerPage({ back }: MixerPageProps): Gtk.Widget {
         <button cssClasses={["manifold-module"]} tooltipText={_("Back")} onClicked={back}>
           <image iconName="go-previous-symbolic" />
         </button>
-        <label cssClasses={["title"]} hexpand halign={Gtk.Align.START} label={_("Volume mixer")} />
+        <label
+          cssClasses={["title"]}
+          hexpand
+          halign={Gtk.Align.START}
+          label={output ? _("Volume mixer") : _("Input devices")}
+        />
       </box>
     ) as Gtk.Widget,
   )
@@ -178,32 +193,36 @@ export default function MixerPage({ back }: MixerPageProps): Gtk.Widget {
       return
     }
 
-    // The three lists are nullable in the library; `For` wants something it can
+    // The lists are nullable in the library; `For` wants something it can
     // iterate, so the empty case is normalised here rather than at every use.
-    const streams = createBinding(audio, "streams").as((all) => all ?? [])
-    const speakers = createBinding(audio, "speakers").as((all) => all ?? [])
-    const microphones = createBinding(audio, "microphones").as((all) => all ?? [])
+    //
+    // `recorders` is the capture side of `streams`: the applications holding
+    // the microphone open, which is what makes the input page worth having at
+    // all rather than being a device list on its own.
+    const endpoints = output
+      ? createBinding(audio, "speakers").as((all) => all ?? [])
+      : createBinding(audio, "microphones").as((all) => all ?? [])
+    const streams = output
+      ? createBinding(audio, "streams").as((all) => all ?? [])
+      : createBinding(audio, "recorders").as((all) => all ?? [])
 
-    const devices = (
-      each: typeof speakers,
-    ): Gtk.Widget =>
-      inScope(() => (
-        <box orientation={Gtk.Orientation.VERTICAL} spacing={2}>
-          <For each={each} id={(endpoint: AstalWpNS.Endpoint) => String(endpoint.id)}>
-            {(endpoint: AstalWpNS.Endpoint) => DeviceRow(endpoint)}
-          </For>
-        </box>
-      ) as Gtk.Widget)
+    const devices = inScope(() => (
+      <box orientation={Gtk.Orientation.VERTICAL} spacing={2}>
+        <For each={endpoints} id={(endpoint: AstalWpNS.Endpoint) => String(endpoint.id)}>
+          {(endpoint: AstalWpNS.Endpoint) => DeviceRow(endpoint)}
+        </For>
+      </box>
+    ) as Gtk.Widget)
 
     // Nothing playing is the normal state, so it gets a line rather than the
-    // whole page: the device lists above it are worth showing either way.
+    // whole page: the device list above it is worth showing either way.
     const applications = inScope(() => (
       <box orientation={Gtk.Orientation.VERTICAL} spacing={10}>
         <label
           cssClasses={["manifold-device-empty", "dim"]}
           halign={Gtk.Align.START}
           visible={streams.as((all) => all.length === 0)}
-          label={_("Nothing is playing")}
+          label={output ? _("Nothing is playing") : _("Nothing is recording")}
         />
         <For each={streams} id={(stream: AstalWpNS.Stream) => String(stream.id)}>
           {(stream: AstalWpNS.Stream) => Row(stream)}
@@ -211,8 +230,7 @@ export default function MixerPage({ back }: MixerPageProps): Gtk.Widget {
       </box>
     ) as Gtk.Widget)
 
-    list.append(Section(_("Output"), devices(speakers)))
-    list.append(Section(_("Input"), devices(microphones)))
+    list.append(Section(output ? _("Output") : _("Input"), devices))
     list.append(Section(_("Applications"), applications))
 
     page.append(scroller)
