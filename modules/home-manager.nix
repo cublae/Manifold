@@ -712,6 +712,10 @@ in
         description = ''
           Corner radius of the overlay's level bar, in pixels. 0 is square;
           anything from half the bar's height upwards gives a pill.
+
+          Left unset the bar follows {option}`programs.manifold.theme.radius`,
+          which is what a bar sitting inside a rounded panel usually wants.
+          Set this only to disagree with that.
         '';
       };
     };

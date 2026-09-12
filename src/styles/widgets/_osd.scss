@@ -18,14 +18,15 @@
     border: 1px solid gtkalpha($fg, 0.3);
   }
 
-  // Square by default; `osd.barRadius` rewrites both radii at runtime, so the
-  // two rules below are the fallback for a shell running without a config.
+  // Both radii are rewritten at runtime -- from `theme.radius`, or from
+  // `osd.barRadius` where that disagrees -- so the two rules below only stand
+  // for the moment before the stylesheet is applied.
   levelbar.manifold-osd-bar {
     min-height: 6px;
 
     trough {
       background-color: gtkalpha($fg, 0.15);
-      border-radius: 0;
+      border-radius: $radius-sm;
       min-height: 6px;
     }
 
@@ -39,7 +40,7 @@
 
     block.filled {
       background-color: $accent-bg;
-      border-radius: 0;
+      border-radius: $radius-sm;
       min-height: 6px;
     }
   }

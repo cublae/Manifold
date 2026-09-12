@@ -226,7 +226,7 @@ Home Manager не используется. Указывать нужно тол
     "doNotDisturb": false
   },
   "launcher": { "minScore": 0.2, "showHidden": false },
-  "osd": { "timeout": 1500, "position": "bottom", "barRadius": 0 },
+  "osd": { "timeout": 1500, "position": "bottom", "barRadius": null },
   "audio": { "maxVolume": 1 },
   "animations": { "enabled": true, "duration": 180 },
   "clipboard": {
@@ -254,6 +254,7 @@ Home Manager не используется. Указывать нужно тол
   },
   "modules": {
     "controlCenter": true,
+    "proxy": true,
     "notifications": true,
     "launcher": true,
     "clipboard": true,
@@ -340,7 +341,7 @@ Home Manager не используется. Указывать нужно тол
 | `notifications.doNotDisturb` | `notifications.doNotDisturb` | `false` | Гасить всплывашки, не теряя сами уведомления |
 | `osd.timeout` | `osd.timeout` | `1500` | Миллисекунды, сколько висит оверлей громкости/яркости |
 | `osd.position` | `osd.position` | `"bottom"` | Где появляется: `bottom`, `top`, `center` |
-| `osd.barRadius` | `osd.barRadius` | `0` | Скругление полоски уровня в пикселях; от половины высоты и выше получается пилюля |
+| `osd.barRadius` | `osd.barRadius` | `null` | Скругление полоски уровня в пикселях. `null` — следовать `theme.radius`, как и всё остальное; задавать отдельно стоит, только если хочется с ним разойтись. `0` — прямые углы, от половины высоты и выше получается пилюля |
 | `audio.maxVolume` | `audio.maxVolume` | `1` | Потолок громкости, где `1` — 100%. PipeWire пускает до 150%, шелл следит за выходом по умолчанию и стягивает обратно |
 | `animations.enabled` | `animations.enable` | `true` | Анимации панелей, уведомлений и страниц. Системный `gtk-enable-animations` всё равно главнее |
 | `animations.duration` | `animations.duration` | `180` | Базовая длительность в миллисекундах |

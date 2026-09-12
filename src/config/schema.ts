@@ -233,8 +233,11 @@ export interface OsdConfig {
   /**
    * Corner radius of the level bar, in pixels. 0 is square; any value at or
    * above half the bar's height gives a pill.
+   *
+   * `null` follows `theme.radius`, which is what a bar sitting inside a
+   * rounded panel usually wants. Set it only to disagree with that.
    */
-  barRadius: number
+  barRadius: number | null
 }
 
 export interface ClipboardConfig {
@@ -457,7 +460,7 @@ export const defaultConfig: ManifoldConfig = {
   osd: {
     timeout: 1500,
     position: "bottom",
-    barRadius: 0,
+    barRadius: null,
   },
   animations: {
     enabled: true,

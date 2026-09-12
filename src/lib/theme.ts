@@ -119,10 +119,15 @@ export function overrideCss(config: ManifoldConfig): string {
     `.manifold-bar-section { margin: 0 ${s}px; }`,
   )
 
-  // The OSD level bar carries its own radius: it is a track, not a panel, and
-  // reads very differently square than pill-shaped. Both nodes need it -- the
-  // fill is a node inside the trough and rounds independently of it.
-  const osdRadius = clamp(config.osd.barRadius, 0, 999)
+  // The OSD level bar follows the shell's radius unless told otherwise. It is a
+  // track rather than a panel and reads very differently square than
+  // pill-shaped, which is why it can be set on its own -- but a bar left square
+  // while every panel around it is rounded looks like something the theme
+  // forgot, so following is the default and `osd.barRadius` is the override.
+  //
+  // Both nodes need the rule: the fill is a node inside the trough and rounds
+  // independently of it.
+  const osdRadius = clamp(config.osd.barRadius ?? r, 0, 999)
   rules.push(
     `.manifold-osd levelbar.manifold-osd-bar trough,` +
       `.manifold-osd levelbar.manifold-osd-bar block { border-radius: ${osdRadius}px; }`,
