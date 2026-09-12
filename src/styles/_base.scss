@@ -20,6 +20,18 @@ window.manifold-window {
   font-size: 1rem;
 }
 
+// A scrolled window clips its child -- it has to, that is what scrolling is --
+// and GTK4 clips to the node's own rounded corners. Give it a radius and the
+// corners bite into whatever scrolls past them: the first letter of the first
+// row goes missing, which is how "Output" comes out reading as "Jutput".
+//
+// Nothing here wants a rounded scroller. The rounding belongs to the panel
+// around it, which is a different node and keeps its own.
+scrolledwindow,
+scrolledwindow > viewport {
+  border-radius: 0;
+}
+
 // The rounded, elevated surface used by dropdown panels.
 .manifold-panel {
   background-color: $bg;
