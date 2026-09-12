@@ -9,6 +9,7 @@ import { _, language, plural } from "../../lib/i18n"
 import type AstalNotifdNS from "gi://AstalNotifd"
 
 import { appImage } from "../../lib/icons"
+import { clamp } from "../../lib/utils"
 
 /**
  * One notification, shared by the popups and the notification centre.
@@ -28,9 +29,23 @@ export interface NotificationCardProps {
   compact?: boolean
 }
 
-/** Thumbnail box for notifications that ship a picture. */
-const THUMB_WIDTH = 76
+/**
+ * The thumbnail box.
+ *
+ * Height is fixed, so every card in a list is the same height whatever it
+ * carries. Width follows the source between these bounds: a square avatar is
+ * shown square and whole, a widescreen screenshot is let out to the wider end
+ * and cropped at the sides, and nothing gets a face cut off to fit a shape it
+ * never had.
+ */
 const THUMB_HEIGHT = 54
+const THUMB_MIN_WIDTH = 54
+const THUMB_MAX_WIDTH = 76
+
+function thumbBox(width: number, height: number): { width: number; height: number } {
+  const wanted = Math.round((THUMB_HEIGHT * width) / height)
+  return { width: clamp(wanted, THUMB_MIN_WIDTH, THUMB_MAX_WIDTH), height: THUMB_HEIGHT }
+}
 
 /**
  * Drives the age labels. Half a minute is fine: the wording never gets finer
@@ -85,28 +100,30 @@ function relativeTime(unixSeconds: number): string {
  * text into whatever was left. `ContentFit.COVER` does not help: it decides how
  * the image is painted inside an allocation, not how large one is asked for.
  *
- * Scaled to *cover* the box and then cropped to it, so the result is exactly
- * the thumbnail size whatever came in -- a square avatar and a widescreen
- * screenshot give the same shaped card. Reading the header first means a large
- * source is never decoded at full size just to be thrown away.
+ * Scaled to *cover* a box of the source's own proportions and then cropped to
+ * it, so the card keeps its height and the picture keeps its shape. Reading the
+ * header first means a large source is never decoded at full size just to be
+ * thrown away.
  */
 function thumbnail(path: string): Gdk.Texture | null {
   try {
     const [, width, height] = GdkPixbuf.Pixbuf.get_file_info(path)
     if (!width || !height) return null
 
-    // Smaller than the box is not a picture, it is an icon. Blowing a 24-pixel
-    // square up to 76 is ugly, and a small texture in a Picture is worse than
-    // ugly: `set_size_request` only raises the *minimum*, so the widget still
-    // asks for a height derived from the image and the card grows anyway.
-    // Those go to the icon path instead, which has a real fixed size.
-    if (width < THUMB_WIDTH || height < THUMB_HEIGHT) return null
+    const box = thumbBox(width, height)
 
-    const scale = Math.max(THUMB_WIDTH / width, THUMB_HEIGHT / height)
+    // Smaller than the box is not a picture, it is an icon. Blowing a 24-pixel
+    // square up to fill it is ugly, and a small texture in a Picture is worse
+    // than ugly: `set_size_request` only raises the *minimum*, so the widget
+    // still asks for a height derived from the image and the card grows anyway.
+    // Those go to the icon path instead, which has a real fixed size.
+    if (width < box.width || height < box.height) return null
+
+    const scale = Math.max(box.width / width, box.height / height)
     const loaded = GdkPixbuf.Pixbuf.new_from_file_at_scale(
       path,
-      Math.max(THUMB_WIDTH, Math.round(width * scale)),
-      Math.max(THUMB_HEIGHT, Math.round(height * scale)),
+      Math.max(box.width, Math.round(width * scale)),
+      Math.max(box.height, Math.round(height * scale)),
       true,
     )
     if (!loaded) return null
@@ -114,10 +131,10 @@ function thumbnail(path: string): Gdk.Texture | null {
     // Centre crop, so the texture is exactly the box and the widget has
     // nothing left to decide.
     const cropped = loaded.new_subpixbuf(
-      Math.floor((loaded.get_width() - THUMB_WIDTH) / 2),
-      Math.floor((loaded.get_height() - THUMB_HEIGHT) / 2),
-      THUMB_WIDTH,
-      THUMB_HEIGHT,
+      Math.floor((loaded.get_width() - box.width) / 2),
+      Math.floor((loaded.get_height() - box.height) / 2),
+      box.width,
+      box.height,
     )
 
     return cropped ? Gdk.Texture.new_for_pixbuf(cropped) : null
@@ -130,8 +147,8 @@ function thumbnail(path: string): Gdk.Texture | null {
 /**
  * The picture or icon shown beside the text.
  *
- * A real image gets a fixed, cropped thumbnail so that cards keep a common
- * shape whatever the source resolution; icon names stay square and unclipped.
+ * A real image gets a thumbnail of fixed height, so cards keep a common height
+ * whatever the source resolution; icon names stay square and unclipped.
  */
 function Thumbnail(n: AstalNotifdNS.Notification): Gtk.Widget {
   const image = n.image
