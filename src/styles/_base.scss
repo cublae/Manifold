@@ -2,9 +2,17 @@
 
 // Layer-shell surfaces must be transparent; the visible panel is the child box,
 // so its rounded corners are not clipped by an opaque window background.
+//
+// Square for the same reason, and it has to be said rather than left out. Theme
+// generators write a blanket `* { border-radius }` into
+// ~/.config/gtk-4.0/gtk.css, GTK applies that file to this shell like any other
+// application, and `*` reaches the window node too -- where GTK4 clips the
+// whole surface to it. A bar that is square by design then comes out with its
+// corners bitten off and the wallpaper showing through them.
 window.manifold-window {
   background-color: transparent;
   color: $fg;
+  border-radius: 0;
 }
 
 .manifold-root {
@@ -24,9 +32,16 @@ window.manifold-window {
 // edge of its own. A hairline against the desktop would also land between the
 // bar and a dropdown -- they are separate layer surfaces meeting exactly there
 // -- and read as a seam down the middle of one continuous panel.
+//
+// The radius is zeroed rather than merely left unset. Theme generators write a
+// blanket `* { border-radius }` into ~/.config/gtk-4.0/gtk.css, GTK applies
+// that file to this shell like any other application, and a `*` rule reaches
+// every node that does not say otherwise -- so a bar meant to be square came
+// out with its corners cut away and the wallpaper showing through them.
 .manifold-bar-panel {
   background-color: $bg;
   color: $fg;
+  border-radius: 0;
 }
 
 .dim {
