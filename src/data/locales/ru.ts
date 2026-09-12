@@ -126,6 +126,7 @@ export const ru: Record<string, string> = {
 
   // -- privacy indicators ---------------------------------------------------
   "Microphone in use": "Микрофон используется",
+  "Microphone muted": "Микрофон выключен",
   "Camera in use": "Камера используется",
   "Capturing the screen": "Идёт захват экрана",
 

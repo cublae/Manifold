@@ -234,6 +234,14 @@ button.manifold-recording {
   .watching {
     color: $accent;
   }
+
+  // A muted microphone is still an open one -- the indicator stays, because
+  // the application can unmute itself -- but it is no longer listening, and
+  // colouring it like something in progress would say the opposite.
+  .listening.muted {
+    color: $fg;
+    opacity: $dim-opacity;
+  }
 }
 
 // -- resources --------------------------------------------------------------
