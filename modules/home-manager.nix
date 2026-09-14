@@ -38,6 +38,38 @@ let
      attribute set entirely rather than merely disabled. */
   hasNiriModule = options ? programs && options.programs ? niri;
 
+  /* Whether Stylix is in the configuration.
+
+     Same rule as above: reading an option no module declared is an error, not
+     a null, so its presence has to be tested before anything is read from it. */
+  hasStylix = options ? stylix;
+
+  /* What Stylix has to say that does not already reach the shell on its own.
+
+     Most of it does. Manifold renders against libadwaita's named colours, and
+     Stylix's GTK target writes those into ~/.config/gtk-4.0/gtk.css -- the
+     whole palette, accent included -- while `gtk-font-name` in settings.ini
+     carries the font. GTK hands both to this shell like any other application,
+     so the colours and the typeface follow Stylix without a line of
+     configuration. What does not follow is the polarity, which the shell would
+     otherwise ask the desktop portal about and could answer differently from
+     the palette it is painting with, and the wallpaper, which the shell
+     otherwise has to go looking for through waypaper or swww. */
+  fromStylix =
+    if !cfg.stylix.enable then
+      { }
+    else
+      {
+        theme =
+          {
+            # "either" is Stylix declining to choose, which is what auto means.
+            mode = if config.stylix.polarity == "either" then "auto" else config.stylix.polarity;
+          }
+          // lib.optionalAttrs (config.stylix.image != null) {
+            wallpaper = toString config.stylix.image;
+          };
+      };
+
   /* Drop sections that came out empty after pruning, so the generated JSON
      contains only what the user actually set. */
   compact =
@@ -184,7 +216,12 @@ let
     else
       settings;
 
-  finalSettings = lib.recursiveUpdate (compact (renameBarEnable generated)) cfg.settings;
+  # Stylix underneath, this module's own options over it, and `settings` over
+  # everything: asking for a colour scheme should not cost you the right to
+  # disagree with one corner of it.
+  finalSettings = lib.recursiveUpdate (
+    lib.recursiveUpdate fromStylix (compact (renameBarEnable generated))
+  ) cfg.settings;
 in
 {
   options.programs.manifold = {
@@ -230,6 +267,35 @@ in
 
         Either way, turn {option}`programs.manifold.systemd.enable` off, or
         the shell is started twice.
+      '';
+    };
+
+    stylix.enable = mkOption {
+      type = types.bool;
+      default = hasStylix && config.stylix.enable && config.stylix.autoEnable;
+      defaultText = lib.literalExpression "config.stylix.enable && config.stylix.autoEnable";
+      description = ''
+        Follow Stylix.
+
+        Off on its own when Stylix is not in the configuration, so this needs
+        no attention either way.
+
+        Most of Stylix already reaches the shell without help. Manifold renders
+        against libadwaita's named colours, which Stylix's GTK target writes
+        into `~/.config/gtk-4.0/gtk.css`, and the font comes through
+        `gtk-font-name` in the same place -- GTK hands both to this shell like
+        any other application. The one thing to leave alone for that to work is
+        {option}`programs.manifold.theme.accent`: set it, and the shell paints
+        that colour over whatever Stylix chose.
+
+        What this option adds is the two things GTK does not carry: the
+        polarity, so the shell does not ask the desktop portal and get an
+        answer that disagrees with the palette it is painting with, and the
+        wallpaper path, which the shell otherwise has to go looking for through
+        waypaper or swww.
+
+        Anything set under {option}`programs.manifold.theme` wins over Stylix,
+        so disagreeing with one corner of the scheme costs one line.
       '';
     };
 
