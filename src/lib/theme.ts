@@ -86,9 +86,14 @@ export function overrideCss(config: ManifoldConfig): string {
   // asynchronously -- reading and quantising an image is not something to do on
   // the way to painting a window -- so the first sheet of a session uses the
   // configured accent and the second one, moments later, has the real answer.
+  // Nothing set means nothing said: no `@define-color`, and libadwaita keeps
+  // whatever the desktop gave it -- GNOME's accent setting, or the palette a
+  // theme generator wrote into ~/.config/gtk-4.0/gtk.css. Overriding that by
+  // default was the shell insisting on GNOME blue over a theme the user had
+  // already chosen.
   const accent = (config.theme.accentFromWallpaper && wallpaperAccent) || config.theme.accent
 
-  if (isHexColor(accent)) {
+  if (accent && isHexColor(accent)) {
     // `accent_bg_color` fills buttons; `accent_color` tints text and icons.
     // libadwaita derives the rest of the accent ramp from these two.
     rules.push(

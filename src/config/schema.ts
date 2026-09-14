@@ -294,8 +294,16 @@ export interface InterfaceConfig {
 export interface ThemeConfig {
   /** `auto` follows the desktop `color-scheme` preference. */
   mode: ColorScheme
-  /** Accent colour as a hex string. Overrides the libadwaita accent. */
-  accent: string
+  /**
+   * Accent colour as a hex string, overriding the libadwaita accent.
+   *
+   * `null` overrides nothing, which is what makes the shell follow the desktop
+   * instead of arguing with it: GNOME's accent setting, or a theme generator
+   * such as Stylix writing `@accent_bg_color` into
+   * `~/.config/gtk-4.0/gtk.css`. On a machine with no such theme libadwaita's
+   * own accent applies, so nothing looks different for having asked.
+   */
+  accent: string | null
   /**
    * Take the accent from the wallpaper instead of `accent`.
    *
@@ -483,7 +491,7 @@ export const defaultConfig: ManifoldConfig = {
   },
   theme: {
     mode: "auto",
-    accent: "#3584e4",
+    accent: null,
     accentFromWallpaper: false,
     wallpaper: "",
     radius: null,
